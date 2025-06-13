@@ -1,0 +1,55 @@
+#root {
+	max-width: 1280px;
+	margin: 0 auto;
+	padding: 2rem;
+	text-align: center;
+}
+
+.task-board {
+	display: flex;
+	gap: 20px;
+	padding: 20px;
+	position: relative;
+}
+
+.task-list {
+	flex: 1;
+	border-radius: 8px;
+	border: 2px solid;
+	padding: 16px;
+	position: relative;
+	overflow: hidden;
+	min-width: 200px;
+}
+
+.task-list h3 {
+	margin: 0 0 16px;
+	position: absolute;
+}
+
+.tasks-container {
+	position: relative;
+	height: 100%;
+	width: 100%;
+}
+
+.task {
+	background: white;
+	color: #000;
+	padding: 12px;
+	border-radius: 4px;
+	border: 1px solid #ddd;
+	cursor: grab;
+	min-width: 120px;
+	max-width: 180px;
+	position: absolute;
+}
+
+.task:active {
+	cursor: grabbing;
+}
+
+.task.dragging {
+	/* opacity: 0.8;
+	transform: rotate(5deg); */
+}
