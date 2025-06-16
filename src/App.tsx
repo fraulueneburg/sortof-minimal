@@ -24,7 +24,6 @@ interface TaskList {
 	_id: string
 	title: string
 	color: string
-	bounds: { x: number; y: number; width: number; height: number }
 }
 
 interface ToDoData {
@@ -86,19 +85,16 @@ export default function App() {
 				_id: 'list-1',
 				title: 'To Do',
 				color: '#ff6b6b',
-				bounds: { x: 0, y: 0, width: 250, height: 300 },
 			},
 			'list-2': {
 				_id: 'list-2',
 				title: 'In Progress',
 				color: '#4ecdc4',
-				bounds: { x: 320, y: 0, width: 250, height: 300 },
 			},
 			'list-3': {
 				_id: 'list-3',
 				title: 'Done',
 				color: '#45b7d1',
-				bounds: { x: 620, y: 0, width: 250, height: 300 },
 			},
 		},
 		tasksByList: {
@@ -112,7 +108,7 @@ export default function App() {
 				title: 'Buy groceries',
 				checked: false,
 				list: 'list-2',
-				position: { x: 16, y: 36.7 }, // 40px/250px * 100, 110px/300px * 100
+				position: { x: 16, y: 36.7 },
 			},
 			'task-2': {
 				_id: 'task-2',
@@ -123,10 +119,10 @@ export default function App() {
 			},
 			'task-3': {
 				_id: 'task-3',
-				title: 'Call the dentist immediately',
+				title: 'Call the dentist for appointment',
 				checked: false,
 				list: 'list-2',
-				position: { x: 16, y: 56.7 }, // 40px/250px * 100, 170px/300px * 100
+				position: { x: 16, y: 56.7 },
 			},
 			'task-4': {
 				_id: 'task-4',
@@ -178,8 +174,6 @@ export default function App() {
 					height: draggedItemRef.getBoundingClientRect().height,
 					width: draggedItemRef.getBoundingClientRect().width,
 					top: draggedItemRef.getBoundingClientRect().top,
-					right: draggedItemRef.getBoundingClientRect().right,
-					bottom: draggedItemRef.getBoundingClientRect().bottom,
 					left: draggedItemRef.getBoundingClientRect().left,
 			  }
 			: null
@@ -190,8 +184,8 @@ export default function App() {
 			const newTasksByList = { ...prevData.tasksByList }
 
 			let newPosition = {
-				x: currentTask.position.x + delta.x,
-				y: currentTask.position.y + delta.y,
+				x: 0,
+				y: 0,
 			}
 
 			let targetListId = currentTask.list
@@ -199,75 +193,36 @@ export default function App() {
 			const targetIsDifferentList = over && over.id !== currentTask.list && prevData.lists[over.id as string]
 
 			if (targetIsDifferentList) {
-				const newList = prevData.lists[over.id as string]
-
 				targetListId = over.id as string
 
 				// CASE 01: Task moved TO first list
 				if (targetListId === 'list-1') {
-					const mouseEvent = event.activatorEvent as MouseEvent
-
 					const draggedDistance = { x: delta.x, y: delta.y }
-					// const mouseStartPos = { x: mouseEvent.clientX, y: mouseEvent.clientY }
-					// const mouseEndPos = { x: mouseStartPos.x + draggedDistance.x, y: mouseStartPos.y + draggedDistance.y }
-
-					const taskWidth = taskMeasurements?.width || 0
-					const taskHeight = taskMeasurements?.height || 0
+					const taskStartPos = { x: taskMeasurements?.left || 0, y: taskMeasurements?.top || 0 }
+					const taskEndPos = { x: taskStartPos.x + draggedDistance.x, y: taskStartPos.y + draggedDistance.y }
 
 					const listWidth = over.rect.width
 					const listHeight = over.rect.height
 					const listOffset = { x: over.rect.left, y: over.rect.top }
-
-					const taskStartPos = { x: taskMeasurements?.left || 0, y: taskMeasurements?.top || 0 }
-					const taskEndPos = { x: taskStartPos.x + draggedDistance.x, y: taskStartPos.y + draggedDistance.y }
-
-					//const offset = { x: mouseStartPos.x - taskStartPos.x, y: mouseStartPos.y - taskStartPos.y }
 
 					const taskEndPosPercent = {
 						x: (taskEndPos.x - listOffset.x) / (listWidth / 100),
 						y: (taskEndPos.y - listOffset.y) / (listHeight / 100),
 					}
 
-					const taskWidthPercent = taskWidth / (listWidth / 100)
-					const taskHeightPercent = taskHeight / (listHeight / 100)
+					const taskWidthPercent = (taskMeasurements?.width || 0) / (listWidth / 100)
+					const taskHeightPercent = (taskMeasurements?.height || 0) / (listHeight / 100)
 
 					newPosition = {
 						x: Math.max(0, Math.min(taskEndPosPercent.x, 100 - taskWidthPercent)),
 						y: Math.max(0, Math.min(taskEndPosPercent.y, 100 - taskHeightPercent)),
 					}
-
-					// console.log('-----------------')
-					// console.log('over.rect', over.rect)
-					// console.log('mouseEvent', mouseEvent)
-					// console.log('Task measurements:', taskMeasurements)
-
-					// console.log('Mouse positions at drag:', {
-					// 	startPosition: {
-					// 		x: mouseEvent.clientX,
-					// 		y: mouseEvent.clientY,
-					// 	},
-					// 	theEndPosition: {
-					// 		x: mouseEvent.clientX + delta.x,
-					// 		y: mouseEvent.clientY + delta.y,
-					// 	},
-					// })
-
-					// const dropXPercent = ((over.rect.left + over.rect.width / 2 - newList.bounds.x) / newList.bounds.width) * 100
-					// const dropYPercent = ((over.rect.top + over.rect.height / 2 - newList.bounds.y) / newList.bounds.height) * 100
-
-					// const taskWidthPercent = taskMeasurements ? (taskMeasurements.width / newList.bounds.width) * 100 : 64
-					// const taskHeightPercent = taskMeasurements ? (taskMeasurements.height / newList.bounds.height) * 100 : 20
-
-					// newPosition = {
-					// 	x: Math.max(0, Math.min(dropXPercent, 100 - taskWidthPercent)),
-					// 	y: Math.max(0, Math.min(dropYPercent, 100 - taskHeightPercent)),
-					// }
 				}
 
-				// Update list assignments - remove from old list first
+				// remove from old list
+				// + add to new list if not already present
 				newTasksByList[currentTask.list] = newTasksByList[currentTask.list].filter((id) => id !== taskId)
 
-				// Add to new list if not already present
 				if (!newTasksByList[targetListId]) {
 					newTasksByList[targetListId] = []
 				}
@@ -275,21 +230,21 @@ export default function App() {
 					newTasksByList[targetListId].push(taskId)
 				}
 			} else {
-				// CASE 02: Task moved WITHIN the first list
+				// CASE 02: Task moved WITHIN a list
 
 				if (currentTask.list === 'list-1') {
-					const currentList = prevData.lists[currentTask.list]
+					const listWidth = over?.rect.width || 0
+					const listHeight = over?.rect.height || 0
+					const distancePercent = { x: (delta.x / listWidth) * 100, y: (delta.y / listHeight) * 100 }
 
-					// Convert delta to percentage
-					const deltaXPercent = (delta.x / currentList.bounds.width) * 100
-					const deltaYPercent = (delta.y / currentList.bounds.height) * 100
+					const taskWidthPercent = (taskMeasurements?.width || 0) / (listWidth / 100)
+					const taskHeightPercent = (taskMeasurements?.height || 0) / (listHeight / 100)
 
 					newPosition = {
-						x: Math.max(0, Math.min(currentTask.position.x + deltaXPercent, 100 - 64)),
-						y: Math.max(0, Math.min(currentTask.position.y + deltaYPercent, 100 - 20)),
+						x: Math.max(0, Math.min(currentTask.position.x + distancePercent.x, 100 - taskWidthPercent)),
+						y: Math.max(0, Math.min(currentTask.position.y + distancePercent.y, 100 - taskHeightPercent)),
 					}
 				}
-				// For other lists, maintain vertical positioning
 			}
 
 			newTasks[taskId] = {
