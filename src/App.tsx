@@ -45,7 +45,6 @@ function DraggableTask({ task, isFreePositioning }: { task: Task; isFreePosition
 				top: `${task.position.y}%`,
 				transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
 				zIndex: isDragging ? 1000 : 1,
-				position: 'absolute' as const,
 		  }
 		: {
 				zIndex: isDragging ? 1000 : 1,
@@ -208,25 +207,23 @@ export default function App() {
 				if (targetListId === 'list-1') {
 					const mouseEvent = event.activatorEvent as MouseEvent
 
-					const mouseStartPosX = mouseEvent.clientX
-					const mouseStartPosY = mouseEvent.clientY
-
-					const mouseEndPosX = mouseEvent.clientX + delta.x
-					const mouseEndPosY = mouseEvent.clientY + delta.y
+					const draggedDistance = { x: delta.x, y: delta.y }
+					const mouseStartPos = { x: mouseEvent.clientX, y: mouseEvent.clientY }
+					const mouseEndPos = { x: mouseStartPos.x + draggedDistance.x, y: mouseStartPos.y + draggedDistance.y }
 
 					const taskWidth = taskMeasurements?.width || 0
 					const taskHeight = taskMeasurements?.height || 0
-					const taskStartTop = taskMeasurements?.top || 0
-					const taskStartLeft = taskMeasurements?.left || 0
-					// const taskStartRight = taskMeasurements?.right || 0
-					// const taskStartBottom = taskMeasurements?.bottom || 0
+					const taskStartPos = { x: taskMeasurements?.left || 0, y: taskMeasurements?.top || 0 }
+					const taskEndPos = { x: taskStartPos.x + draggedDistance.x, y: taskStartPos.y + draggedDistance.y }
 
-					const targetListWidth = over.rect.width
-					const targetListHeight = over.rect.height
-					const targetListTop = over.rect.top
-					const targetListRight = over.rect.right
-					const targetListBottom = over.rect.bottom
-					const targetListLeft = over.rect.left
+					const offset = { x: mouseStartPos.x - taskStartPos.x, y: mouseStartPos.y - taskStartPos.y }
+
+					const listWidth = over.rect.width
+					const listHeight = over.rect.height
+					const listPos = { x: over.rect.left, y: over.rect.top }
+
+					const taskWidthPercent = (taskWidth / listWidth) * 100
+					const taskHeightPercent = (taskHeight / listHeight) * 100
 
 					// console.log('over.rect', over.rect)
 					// console.log('mouseEvent', mouseEvent)
@@ -243,18 +240,22 @@ export default function App() {
 					// 	},
 					// })
 
+					// const dropXPercent = ((over.rect.left + over.rect.width / 2 - newList.bounds.x) / newList.bounds.width) * 100
+					// const dropYPercent = ((over.rect.top + over.rect.height / 2 - newList.bounds.y) / newList.bounds.height) * 100
+
+					// const taskWidthPercent = taskMeasurements ? (taskMeasurements.width / newList.bounds.width) * 100 : 64
+					// const taskHeightPercent = taskMeasurements ? (taskMeasurements.height / newList.bounds.height) * 100 : 20
+
+					// newPosition = {
+					// 	x: Math.max(0, Math.min(dropXPercent, 100 - taskWidthPercent)),
+					// 	y: Math.max(0, Math.min(dropYPercent, 100 - taskHeightPercent)),
+					// }
+
 					console.log('-----------------')
 
-					const dropXPercent = ((over.rect.left + over.rect.width / 2 - newList.bounds.x) / newList.bounds.width) * 100
-					const dropYPercent = ((over.rect.top + over.rect.height / 2 - newList.bounds.y) / newList.bounds.height) * 100
-
-					// Use the stored measurements to calculate the position
-					const taskWidthPercent = taskMeasurements ? (taskMeasurements.width / newList.bounds.width) * 100 : 64
-					const taskHeightPercent = taskMeasurements ? (taskMeasurements.height / newList.bounds.height) * 100 : 20
-
 					newPosition = {
-						x: Math.max(0, Math.min(dropXPercent, 100 - taskWidthPercent)),
-						y: Math.max(0, Math.min(dropYPercent, 100 - taskHeightPercent)),
+						x: 50,
+						y: 50,
 					}
 				}
 
@@ -270,6 +271,7 @@ export default function App() {
 				}
 			} else {
 				// CASE 02: Task moved WITHIN the first list
+
 				if (currentTask.list === 'list-1') {
 					const currentList = prevData.lists[currentTask.list]
 
