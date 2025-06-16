@@ -46,6 +46,7 @@ function DraggableTask({ task, isFreePositioning }: { task: Task; isFreePosition
 				zIndex: isDragging ? 1000 : 1,
 		  }
 		: {
+				opacity: isDragging ? 0 : 1,
 				zIndex: isDragging ? 1000 : 1,
 		  }
 
