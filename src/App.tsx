@@ -10,6 +10,7 @@ import {
 	useDroppable,
 	rectIntersection,
 } from '@dnd-kit/core'
+
 import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core'
 
 interface Task {
@@ -32,8 +33,7 @@ interface ToDoData {
 	tasks: Record<string, Task>
 }
 
-// Free draggable task - positioned absolutely on the board
-function DraggableTask({ task, isFreePositioning }: { task: Task; isFreePositioning: boolean }) {
+function Task({ task, isFreePositioning }: { task: Task; isFreePositioning: boolean }) {
 	const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
 		id: task._id,
 	})
@@ -57,8 +57,7 @@ function DraggableTask({ task, isFreePositioning }: { task: Task; isFreePosition
 	)
 }
 
-// Droppable list area - just the visual container
-function DroppableList({ list, tasks }: { list: TaskList; tasks: Task[] }) {
+function List({ list, tasks }: { list: TaskList; tasks: Task[] }) {
 	const { setNodeRef, isOver } = useDroppable({
 		id: list._id,
 	})
@@ -72,7 +71,7 @@ function DroppableList({ list, tasks }: { list: TaskList; tasks: Task[] }) {
 			<h3>{list.title}</h3>
 			<div className="task-list-content">
 				{tasks.map((task) => (
-					<DraggableTask key={task._id} task={task} isFreePositioning={list._id === 'list-1'} />
+					<Task key={task._id} task={task} isFreePositioning={list._id === 'list-1'} />
 				))}
 			</div>
 		</div>
@@ -220,8 +219,6 @@ export default function App() {
 					}
 				}
 
-				// remove from old list
-				// + add to new list if not already present
 				newTasksByList[currentTask.list] = newTasksByList[currentTask.list].filter((id) => id !== taskId)
 
 				if (!newTasksByList[targetListId]) {
@@ -231,8 +228,7 @@ export default function App() {
 					newTasksByList[targetListId].push(taskId)
 				}
 			} else {
-				// CASE 02: Task moved WITHIN a list
-
+				// CASE 02: Task moved WITHIN first list
 				if (currentTask.list === 'list-1') {
 					const listWidth = over?.rect.width || 0
 					const listHeight = over?.rect.height || 0
@@ -270,11 +266,7 @@ export default function App() {
 			onDragEnd={handleDragEnd}>
 			<div className="task-board">
 				{Object.values(toDoData.lists).map((list) => (
-					<DroppableList
-						key={list._id}
-						list={list}
-						tasks={toDoData.tasksByList[list._id].map((taskId) => toDoData.tasks[taskId])}
-					/>
+					<List key={list._id} list={list} tasks={toDoData.tasksByList[list._id].map((taskId) => toDoData.tasks[taskId])} />
 				))}
 			</div>
 
