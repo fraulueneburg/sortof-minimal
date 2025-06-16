@@ -208,23 +208,35 @@ export default function App() {
 					const mouseEvent = event.activatorEvent as MouseEvent
 
 					const draggedDistance = { x: delta.x, y: delta.y }
-					const mouseStartPos = { x: mouseEvent.clientX, y: mouseEvent.clientY }
-					const mouseEndPos = { x: mouseStartPos.x + draggedDistance.x, y: mouseStartPos.y + draggedDistance.y }
+					// const mouseStartPos = { x: mouseEvent.clientX, y: mouseEvent.clientY }
+					// const mouseEndPos = { x: mouseStartPos.x + draggedDistance.x, y: mouseStartPos.y + draggedDistance.y }
 
 					const taskWidth = taskMeasurements?.width || 0
 					const taskHeight = taskMeasurements?.height || 0
-					const taskStartPos = { x: taskMeasurements?.left || 0, y: taskMeasurements?.top || 0 }
-					const taskEndPos = { x: taskStartPos.x + draggedDistance.x, y: taskStartPos.y + draggedDistance.y }
-
-					const offset = { x: mouseStartPos.x - taskStartPos.x, y: mouseStartPos.y - taskStartPos.y }
 
 					const listWidth = over.rect.width
 					const listHeight = over.rect.height
-					const listPos = { x: over.rect.left, y: over.rect.top }
+					const listOffset = { x: over.rect.left, y: over.rect.top }
 
-					const taskWidthPercent = (taskWidth / listWidth) * 100
-					const taskHeightPercent = (taskHeight / listHeight) * 100
+					const taskStartPos = { x: taskMeasurements?.left || 0, y: taskMeasurements?.top || 0 }
+					const taskEndPos = { x: taskStartPos.x + draggedDistance.x, y: taskStartPos.y + draggedDistance.y }
 
+					//const offset = { x: mouseStartPos.x - taskStartPos.x, y: mouseStartPos.y - taskStartPos.y }
+
+					const taskEndPosPercent = {
+						x: (taskEndPos.x - listOffset.x) / (listWidth / 100),
+						y: (taskEndPos.y - listOffset.y) / (listHeight / 100),
+					}
+
+					const taskWidthPercent = taskWidth / (listWidth / 100)
+					const taskHeightPercent = taskHeight / (listHeight / 100)
+
+					newPosition = {
+						x: Math.max(0, Math.min(taskEndPosPercent.x, 100 - taskWidthPercent)),
+						y: Math.max(0, Math.min(taskEndPosPercent.y, 100 - taskHeightPercent)),
+					}
+
+					// console.log('-----------------')
 					// console.log('over.rect', over.rect)
 					// console.log('mouseEvent', mouseEvent)
 					// console.log('Task measurements:', taskMeasurements)
@@ -250,13 +262,6 @@ export default function App() {
 					// 	x: Math.max(0, Math.min(dropXPercent, 100 - taskWidthPercent)),
 					// 	y: Math.max(0, Math.min(dropYPercent, 100 - taskHeightPercent)),
 					// }
-
-					console.log('-----------------')
-
-					newPosition = {
-						x: 50,
-						y: 50,
-					}
 				}
 
 				// Update list assignments - remove from old list first
