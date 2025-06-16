@@ -20,9 +20,10 @@
 	position: relative;
 	overflow: hidden;
 	min-width: 200px;
+	box-sizing: border-box;
 
-	height: 300px;
-	width: 250px;
+	height: 420px;
+	width: 280px;
 }
 
 .task-list h3 {
@@ -42,7 +43,6 @@
 	border-radius: 4px;
 	border: 1px solid #ddd;
 	cursor: grab;
-	min-width: 120px;
 	max-width: fit-content;
 	width: auto;
 }
@@ -53,9 +53,4 @@
 
 .task:active {
 	cursor: grabbing;
-}
-
-.task.dragging {
-	/* opacity: 0.8;
-	transform: rotate(5deg); */
 }
