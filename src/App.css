@@ -20,11 +20,13 @@
 	position: relative;
 	overflow: hidden;
 	min-width: 200px;
+
+	height: 300px;
+	width: 250px;
 }
 
 .task-list h3 {
 	margin: 0 0 16px;
-	position: absolute;
 }
 
 .tasks-container {
@@ -41,7 +43,11 @@
 	border: 1px solid #ddd;
 	cursor: grab;
 	min-width: 120px;
-	max-width: 180px;
+	max-width: fit-content;
+	width: auto;
+}
+
+.task-list:first-of-type .task {
 	position: absolute;
 }
 

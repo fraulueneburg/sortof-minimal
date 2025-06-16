@@ -34,18 +34,24 @@ interface ToDoData {
 }
 
 // Free draggable task - positioned absolutely on the board
-function DraggableTask({ task }: { task: Task }) {
+function DraggableTask({ task, isFreePositioning }: { task: Task; isFreePositioning: boolean }) {
 	const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
 		id: task._id,
 	})
 
-	const style = {
-		left: task.position.x,
-		top: task.position.y,
-		transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
-		opacity: isDragging ? 0.3 : 1,
-		zIndex: isDragging ? 1000 : 1,
-	}
+	const style = isFreePositioning
+		? {
+				left: `${task.position.x}%`,
+				top: `${task.position.y}%`,
+				transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
+				opacity: isDragging ? 0 : 1,
+				zIndex: isDragging ? 1000 : 1,
+				position: 'absolute' as const,
+		  }
+		: {
+				opacity: isDragging ? 0 : 1,
+				zIndex: isDragging ? 1000 : 1,
+		  }
 
 	return (
 		<section ref={setNodeRef} style={style} {...attributes} {...listeners} className="task">
@@ -55,7 +61,7 @@ function DraggableTask({ task }: { task: Task }) {
 }
 
 // Droppable list area - just the visual container
-function DroppableList({ list }: { list: TaskList }) {
+function DroppableList({ list, tasks }: { list: TaskList; tasks: Task[] }) {
 	const { setNodeRef, isOver } = useDroppable({
 		id: list._id,
 	})
@@ -69,6 +75,11 @@ function DroppableList({ list }: { list: TaskList }) {
 	return (
 		<div ref={setNodeRef} style={style} className="task-list">
 			<h3>{list.title}</h3>
+			<div className="task-list-content">
+				{tasks.map((task) => (
+					<DraggableTask key={task._id} task={task} isFreePositioning={list._id === 'list-1'} />
+				))}
+			</div>
 		</div>
 	)
 }
@@ -80,7 +91,7 @@ export default function App() {
 				_id: 'list-1',
 				title: 'To Do',
 				color: '#ff6b6b',
-				bounds: { x: 20, y: 0, width: 250, height: 300 },
+				bounds: { x: 0, y: 0, width: 250, height: 300 },
 			},
 			'list-2': {
 				_id: 'list-2',
@@ -106,35 +117,35 @@ export default function App() {
 				title: 'Buy groceries',
 				checked: false,
 				list: 'list-1',
-				position: { x: 40, y: 110 },
+				position: { x: 16, y: 36.7 },
 			},
 			'task-2': {
 				_id: 'task-2',
 				title: 'Review code',
 				checked: false,
 				list: 'list-2',
-				position: { x: 340, y: 110 },
+				position: { x: 0, y: 0 },
 			},
 			'task-3': {
 				_id: 'task-3',
 				title: 'Call dentist',
 				checked: false,
 				list: 'list-1',
-				position: { x: 40, y: 170 },
+				position: { x: 16, y: 56.7 },
 			},
 			'task-4': {
 				_id: 'task-4',
 				title: 'Submit report',
 				checked: true,
 				list: 'list-3',
-				position: { x: 640, y: 110 },
+				position: { x: 0, y: 0 },
 			},
 			'task-5': {
 				_id: 'task-5',
 				title: 'Update resume',
 				checked: true,
 				list: 'list-3',
-				position: { x: 640, y: 170 },
+				position: { x: 0, y: 0 },
 			},
 		},
 	})
@@ -163,6 +174,8 @@ export default function App() {
 
 		if (!currentTask) return
 
+		console.log('toDoData', toDoData)
+
 		setToDoData((prevData) => {
 			const newTasks = { ...prevData.tasks }
 			const newTasksByList = { ...prevData.tasksByList }
@@ -177,33 +190,45 @@ export default function App() {
 			// Check if dropped over a different list
 			if (over && over.id !== currentTask.list && prevData.lists[over.id as string]) {
 				const newList = prevData.lists[over.id as string]
+
 				targetListId = over.id as string
 
-				newPosition = {
-					x: Math.max(newList.bounds.x + 20, Math.min(newPosition.x, newList.bounds.x + newList.bounds.width - 160)),
-					y: Math.max(newList.bounds.y + 80, Math.min(newPosition.y, newList.bounds.y + newList.bounds.height - 60)),
+				// CASE 01: Task moved TO first list
+				if (targetListId === 'list-1') {
+					// Convert drop position to percentage
+					const dropXPercent = ((over.rect.left - newList.bounds.x) / newList.bounds.width) * 100
+					const dropYPercent = ((over.rect.top - newList.bounds.y) / newList.bounds.height) * 100
+
+					newPosition = {
+						x: Math.max(0, Math.min(dropXPercent, 100 - 64)), // 64% is roughly the task width
+						y: Math.max(0, Math.min(dropYPercent, 100 - 20)), // 20% is roughly the task height
+					}
 				}
 
-				// Update list assignments
+				// Update list assignments - remove from old list first
 				newTasksByList[currentTask.list] = newTasksByList[currentTask.list].filter((id) => id !== taskId)
 
+				// Add to new list if not already present
 				if (!newTasksByList[targetListId]) {
 					newTasksByList[targetListId] = []
 				}
-				newTasksByList[targetListId].push(taskId)
-			} else {
-				// Constrain within current list bounds
-				const currentList = prevData.lists[currentTask.list]
-				newPosition = {
-					x: Math.max(
-						currentList.bounds.x + 20,
-						Math.min(newPosition.x, currentList.bounds.x + currentList.bounds.width - 160)
-					),
-					y: Math.max(
-						currentList.bounds.y + 80,
-						Math.min(newPosition.y, currentList.bounds.y + currentList.bounds.height - 60)
-					),
+				if (!newTasksByList[targetListId].includes(taskId)) {
+					newTasksByList[targetListId].push(taskId)
 				}
+			} else {
+				// CASE 02: Task moved WITHIN the first list
+				if (currentTask.list === 'list-1') {
+					const currentList = prevData.lists[currentTask.list]
+					// Convert delta to percentage
+					const deltaXPercent = (delta.x / currentList.bounds.width) * 100
+					const deltaYPercent = (delta.y / currentList.bounds.height) * 100
+
+					newPosition = {
+						x: Math.max(0, Math.min(currentTask.position.x + deltaXPercent, 100 - 64)),
+						y: Math.max(0, Math.min(currentTask.position.y + deltaYPercent, 100 - 20)),
+					}
+				}
+				// For other lists, maintain vertical positioning
 			}
 
 			newTasks[taskId] = {
@@ -227,21 +252,19 @@ export default function App() {
 			onDragStart={handleDragStart}
 			onDragEnd={handleDragEnd}>
 			<div className="task-board">
-				{/* Render list boundaries */}
 				{Object.values(toDoData.lists).map((list) => (
-					<DroppableList key={list._id} list={list} />
-				))}
-
-				{/* Render all tasks at board level */}
-				{Object.values(toDoData.tasks).map((task) => (
-					<DraggableTask key={task._id} task={task} />
+					<DroppableList
+						key={list._id}
+						list={list}
+						tasks={toDoData.tasksByList[list._id].map((taskId) => toDoData.tasks[taskId])}
+					/>
 				))}
 			</div>
 
 			<DragOverlay>
 				{activeTask ? (
 					<section className="task dragging">
-						<span style={{ textDecoration: activeTask.checked ? 'line-through' : 'none' }}>{activeTask.title}</span>
+						<span>{activeTask.title}</span>
 					</section>
 				) : null}
 			</DragOverlay>
