@@ -1,63 +1,12 @@
-import './App.css'
+import './assets/css/App.css'
 import { useState } from 'react'
-import {
-	DndContext,
-	DragOverlay,
-	PointerSensor,
-	useSensor,
-	useSensors,
-	useDraggable,
-	useDroppable,
-	rectIntersection,
-} from '@dnd-kit/core'
+import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors, useDroppable, rectIntersection } from '@dnd-kit/core'
+import Task from './components/Task'
 
 import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core'
+import type { TaskData, TaskList, ToDoData } from './utils/types'
 
-interface Task {
-	_id: string
-	title: string
-	checked: boolean
-	list: string
-	position: { x: number; y: number }
-}
-
-interface TaskList {
-	_id: string
-	title: string
-	color: string
-}
-
-interface ToDoData {
-	lists: Record<string, TaskList>
-	tasksByList: Record<string, string[]>
-	tasks: Record<string, Task>
-}
-
-function Task({ task, isFreePositioning }: { task: Task; isFreePositioning: boolean }) {
-	const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
-		id: task._id,
-	})
-
-	const style = isFreePositioning
-		? {
-				left: `${task.position.x}%`,
-				top: `${task.position.y}%`,
-				transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
-				zIndex: isDragging ? 1000 : 1,
-		  }
-		: {
-				opacity: isDragging ? 0 : 1,
-				zIndex: isDragging ? 1000 : 1,
-		  }
-
-	return (
-		<section ref={setNodeRef} style={style} {...attributes} {...listeners} className="task" data-task-id={task._id}>
-			{task.title}
-		</section>
-	)
-}
-
-function List({ list, tasks }: { list: TaskList; tasks: Task[] }) {
+function List({ list, tasks }: { list: TaskList; tasks: TaskData[] }) {
 	const { setNodeRef, isOver } = useDroppable({
 		id: list._id,
 	})
@@ -141,7 +90,7 @@ export default function App() {
 		},
 	})
 
-	const [activeTask, setActiveTask] = useState<Task | null>(null)
+	const [activeTask, setActiveTask] = useState<TaskData | null>(null)
 	const [draggedItemRef, setDraggedItemRef] = useState<HTMLElement | null>(null)
 
 	const sensors = useSensors(
