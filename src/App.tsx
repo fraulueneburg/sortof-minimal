@@ -1,31 +1,10 @@
 import './assets/css/App.css'
 import { useState } from 'react'
-import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors, useDroppable, rectIntersection } from '@dnd-kit/core'
-import Task from './components/Task'
+import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors, rectIntersection } from '@dnd-kit/core'
 
 import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core'
-import type { TaskData, TaskList, ToDoData } from './utils/types'
-
-function List({ list, tasks }: { list: TaskList; tasks: TaskData[] }) {
-	const { setNodeRef, isOver } = useDroppable({
-		id: list._id,
-	})
-
-	const style = {
-		borderColor: isOver ? 'blue' : list.color,
-	}
-
-	return (
-		<div ref={setNodeRef} style={style} className={`task-list ${list._id}`}>
-			<h3>{list.title}</h3>
-			<div className="task-list-content">
-				{tasks.map((task) => (
-					<Task key={task._id} task={task} isFreePositioning={list._id === 'list-1'} />
-				))}
-			</div>
-		</div>
-	)
-}
+import type { TaskData, ToDoData } from './utils/types'
+import List from './components/List'
 
 export default function App() {
 	const [toDoData, setToDoData] = useState<ToDoData>({
@@ -47,45 +26,45 @@ export default function App() {
 			},
 		},
 		tasksByList: {
-			'list-1': [],
-			'list-2': ['task-2', 'task-1', 'task-3'],
-			'list-3': ['task-4', 'task-5'],
+			'list-1': ['task-2', 'task-1', 'task-3', 'task-4', 'task-5'],
+			'list-2': [],
+			'list-3': [],
 		},
 		tasks: {
 			'task-1': {
 				_id: 'task-1',
 				title: 'Buy groceries',
 				checked: false,
-				list: 'list-2',
+				list: 'list-1',
 				position: { x: 16, y: 36.7 },
 			},
 			'task-2': {
 				_id: 'task-2',
 				title: 'Review code',
 				checked: false,
-				list: 'list-2',
-				position: { x: 0, y: 0 },
+				list: 'list-1',
+				position: { x: 60, y: 50 },
 			},
 			'task-3': {
 				_id: 'task-3',
 				title: 'Call the dentist for appointment',
 				checked: false,
-				list: 'list-2',
-				position: { x: 16, y: 56.7 },
+				list: 'list-1',
+				position: { x: 35, y: 56.7 },
 			},
 			'task-4': {
 				_id: 'task-4',
 				title: 'Submit report',
 				checked: true,
-				list: 'list-3',
+				list: 'list-1',
 				position: { x: 0, y: 0 },
 			},
 			'task-5': {
 				_id: 'task-5',
 				title: 'Update resume',
 				checked: true,
-				list: 'list-3',
-				position: { x: 0, y: 0 },
+				list: 'list-1',
+				position: { x: 40, y: 60 },
 			},
 		},
 	})
