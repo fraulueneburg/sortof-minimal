@@ -27,8 +27,8 @@ export default function App() {
 		},
 		tasksByList: {
 			'list-1': ['task-2', 'task-1', 'task-3', 'task-4', 'task-5'],
-			'list-2': [],
-			'list-3': [],
+			'list-2': ['task-6', 'task-7', 'task-8'],
+			'list-3': ['task-9', 'task-10', 'task-11'],
 		},
 		tasks: {
 			'task-1': {
@@ -47,7 +47,7 @@ export default function App() {
 			},
 			'task-3': {
 				_id: 'task-3',
-				title: 'Call the dentist for appointment',
+				title: 'Call dentist for appointment',
 				checked: false,
 				list: 'list-1',
 				position: { x: 35, y: 56.7 },
@@ -57,14 +57,56 @@ export default function App() {
 				title: 'Submit report',
 				checked: true,
 				list: 'list-1',
-				position: { x: 0, y: 0 },
+				position: { x: 0, y: 30 },
 			},
 			'task-5': {
 				_id: 'task-5',
 				title: 'Update resume',
 				checked: true,
 				list: 'list-1',
-				position: { x: 40, y: 60 },
+				position: { x: 4, y: 90 },
+			},
+			'task-6': {
+				_id: 'task-6',
+				title: '1. one thing',
+				checked: true,
+				list: 'list-2',
+				position: { x: 4, y: 90 },
+			},
+			'task-7': {
+				_id: 'task-7',
+				title: '2. two things',
+				checked: true,
+				list: 'list-2',
+				position: { x: 4, y: 90 },
+			},
+			'task-8': {
+				_id: 'task-8',
+				title: '3. three things',
+				checked: true,
+				list: 'list-2',
+				position: { x: 4, y: 90 },
+			},
+			'task-9': {
+				_id: 'task-9',
+				title: '4. four things',
+				checked: true,
+				list: 'list-3',
+				position: { x: 4, y: 90 },
+			},
+			'task-10': {
+				_id: 'task-10',
+				title: '5. five things',
+				checked: true,
+				list: 'list-3',
+				position: { x: 4, y: 90 },
+			},
+			'task-11': {
+				_id: 'task-11',
+				title: '6. six things',
+				checked: true,
+				list: 'list-3',
+				position: { x: 4, y: 90 },
 			},
 		},
 	})
@@ -120,6 +162,7 @@ export default function App() {
 
 			const targetIsDifferentList = over && over.id !== currentTask.list && prevData.lists[over.id as string]
 
+			// CASE 01: Task moved to different list
 			if (targetIsDifferentList) {
 				targetListId = over.id as string
 
