@@ -14,11 +14,11 @@ export default function List({ list, tasks }: { list: TaskList; tasks: TaskData[
 	return (
 		<div ref={setNodeRef} style={style} className={`task-list ${list._id}`}>
 			<h3>{list.title}</h3>
-			<div className="task-list-content">
+			<ul className="task-list-content">
 				{tasks.map((task) => (
 					<Task key={task._id} task={task} isFreePositioning={list._id === 'list-1'} />
 				))}
-			</div>
+			</ul>
 		</div>
 	)
 }

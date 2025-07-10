@@ -14,13 +14,13 @@ export default function Task({ task, isFreePositioning }: { task: TaskData; isFr
 				zIndex: isDragging ? 1000 : 1,
 		  }
 		: {
-				// opacity: isDragging ? 0 : 1,
+				opacity: isDragging ? 0 : 1,
 				zIndex: isDragging ? 1000 : 1,
 		  }
 
 	return (
-		<section ref={setNodeRef} style={style} {...attributes} {...listeners} className="task" data-task-id={task._id}>
+		<li ref={setNodeRef} style={style} {...attributes} {...listeners} className="task" data-task-id={task._id}>
 			{task.title}
-		</section>
+		</li>
 	)
 }
