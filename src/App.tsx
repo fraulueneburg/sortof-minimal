@@ -90,7 +90,7 @@ export default function App() {
 		const { active, over, delta } = event
 		setActiveTask(null)
 
-		if (!delta) return
+		if (!delta || (delta.x === 0 && delta.y === 0)) return
 
 		const taskId = active.id as string
 		const currentTask = toDoData.tasks[taskId]
@@ -123,7 +123,6 @@ export default function App() {
 			if (targetIsDifferentList) {
 				targetListId = over.id as string
 
-				// CASE 01: Task moved TO first list
 				if (targetListId === 'list-1') {
 					const draggedDistance = { x: delta.x, y: delta.y }
 					const taskStartPos = { x: taskMeasurements?.left || 0, y: taskMeasurements?.top || 0 }
