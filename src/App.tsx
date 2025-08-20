@@ -4,112 +4,12 @@ import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors, rectInte
 
 import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core'
 import type { TaskData, ToDoData } from './utils/types'
+import { dummyData } from './data/dummydata.ts'
+
 import List from './components/List'
 
 export default function App() {
-	const [toDoData, setToDoData] = useState<ToDoData>({
-		lists: {
-			'list-1': {
-				_id: 'list-1',
-				title: 'To Do',
-				color: '#ff6b6b',
-			},
-			'list-2': {
-				_id: 'list-2',
-				title: 'In Progress',
-				color: '#4ecdc4',
-			},
-			'list-3': {
-				_id: 'list-3',
-				title: 'Done',
-				color: '#45b7d1',
-			},
-		},
-		tasksByList: {
-			'list-1': ['task-2', 'task-1', 'task-3', 'task-4', 'task-5'],
-			'list-2': ['task-6', 'task-7', 'task-8'],
-			'list-3': ['task-9', 'task-10', 'task-11'],
-		},
-		tasks: {
-			'task-1': {
-				_id: 'task-1',
-				title: 'Buy groceries',
-				checked: false,
-				list: 'list-1',
-				position: { x: 16, y: 36.7 },
-			},
-			'task-2': {
-				_id: 'task-2',
-				title: 'Review code',
-				checked: false,
-				list: 'list-1',
-				position: { x: 60, y: 50 },
-			},
-			'task-3': {
-				_id: 'task-3',
-				title: 'Call dentist for appointment',
-				checked: false,
-				list: 'list-1',
-				position: { x: 35, y: 56.7 },
-			},
-			'task-4': {
-				_id: 'task-4',
-				title: 'Submit report',
-				checked: true,
-				list: 'list-1',
-				position: { x: 0, y: 30 },
-			},
-			'task-5': {
-				_id: 'task-5',
-				title: 'Update resume',
-				checked: true,
-				list: 'list-1',
-				position: { x: 4, y: 90 },
-			},
-			'task-6': {
-				_id: 'task-6',
-				title: '1. one thing',
-				checked: true,
-				list: 'list-2',
-				position: { x: 4, y: 90 },
-			},
-			'task-7': {
-				_id: 'task-7',
-				title: '2. two things',
-				checked: true,
-				list: 'list-2',
-				position: { x: 4, y: 90 },
-			},
-			'task-8': {
-				_id: 'task-8',
-				title: '3. three things',
-				checked: true,
-				list: 'list-2',
-				position: { x: 4, y: 90 },
-			},
-			'task-9': {
-				_id: 'task-9',
-				title: '4. four things',
-				checked: true,
-				list: 'list-3',
-				position: { x: 4, y: 90 },
-			},
-			'task-10': {
-				_id: 'task-10',
-				title: '5. five things',
-				checked: true,
-				list: 'list-3',
-				position: { x: 4, y: 90 },
-			},
-			'task-11': {
-				_id: 'task-11',
-				title: '6. six things',
-				checked: true,
-				list: 'list-3',
-				position: { x: 4, y: 90 },
-			},
-		},
-	})
+	const [toDoData, setToDoData] = useState<ToDoData>(dummyData)
 
 	const [activeTask, setActiveTask] = useState<TaskData | null>(null)
 	const [draggedItemRef, setDraggedItemRef] = useState<HTMLElement | null>(null)
