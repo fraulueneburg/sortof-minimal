@@ -236,7 +236,12 @@ export default function App() {
 			onDragEnd={handleDragEnd}>
 			<div className="task-board">
 				{Object.values(toDoData.lists).map((list) => (
-					<List key={list._id} list={list} tasks={toDoData.tasksByList[list._id].map((taskId) => toDoData.tasks[taskId])} />
+					<List
+						key={list._id}
+						list={list}
+						tasks={toDoData.tasksByList[list._id].map((taskId) => toDoData.tasks[taskId])}
+						taskIds={toDoData.tasksByList[list._id]}
+					/>
 				))}
 			</div>
 
