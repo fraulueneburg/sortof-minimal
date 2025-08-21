@@ -32,7 +32,7 @@ export default function App() {
 		const { active, over, delta } = event
 		setActiveTask(null)
 
-		if (!delta || (delta.x === 0 && delta.y === 0)) return
+		if (!over || !delta || (delta.x === 0 && delta.y === 0)) return
 
 		const taskId = active.id as string
 		const currentTask = toDoData.tasks[taskId]
