@@ -10,6 +10,10 @@ export default function List({ list, tasks, taskIds }: { list: TaskList; tasks: 
 
 	const { setNodeRef, isOver } = useDroppable({
 		id: list._id,
+		data: {
+			type: 'list',
+			item: list,
+		},
 	})
 
 	const style = {

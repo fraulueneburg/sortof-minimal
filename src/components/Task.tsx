@@ -4,6 +4,10 @@ import { useSortable } from '@dnd-kit/sortable'
 export default function Task({ task, isFreePositioning }: { task: TaskData; isFreePositioning: boolean }) {
 	const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
 		id: task._id,
+		data: {
+			type: 'task',
+			item: task,
+		},
 	})
 
 	const style = isFreePositioning
