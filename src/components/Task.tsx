@@ -1,8 +1,8 @@
-import { useDraggable } from '@dnd-kit/core'
 import type { TaskData } from '../utils/types'
+import { useSortable } from '@dnd-kit/sortable'
 
 export default function Task({ task, isFreePositioning }: { task: TaskData; isFreePositioning: boolean }) {
-	const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+	const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
 		id: task._id,
 	})
 
@@ -11,11 +11,13 @@ export default function Task({ task, isFreePositioning }: { task: TaskData; isFr
 				left: `${task.position.x}%`,
 				top: `${task.position.y}%`,
 				transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
+				opacity: isDragging ? 0 : 1,
 				zIndex: isDragging ? 1000 : 1,
 		  }
 		: {
 				opacity: isDragging ? 0 : 1,
 				zIndex: isDragging ? 1000 : 1,
+				transition,
 		  }
 
 	return (
