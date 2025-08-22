@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors, rectIntersection } from '@dnd-kit/core'
 
 import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core'
-import type { TaskData, ToDoData } from './utils/types'
+import type { TaskData, ToDoData } from './types'
 import { dummyData } from './data/dummydata.ts'
 
 import List from './components/List'
