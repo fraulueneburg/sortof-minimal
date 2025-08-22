@@ -1,4 +1,4 @@
-import type { TaskData } from '../utils/types'
+import type { DraggableItemData, TaskData } from '../types'
 import { useSortable } from '@dnd-kit/sortable'
 
 export default function Task({ task, isFreePositioning }: { task: TaskData; isFreePositioning: boolean }) {
@@ -7,7 +7,7 @@ export default function Task({ task, isFreePositioning }: { task: TaskData; isFr
 		data: {
 			type: 'task',
 			item: task,
-		},
+		} satisfies DraggableItemData,
 	})
 
 	const style = isFreePositioning

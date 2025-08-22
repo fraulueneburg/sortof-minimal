@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 
-import type { TaskData, TaskList } from '../utils/types'
+import type { DraggableItemData, TaskData, TaskList } from '../types'
 import Task from './Task'
 
 export default function List({ list, tasks, taskIds }: { list: TaskList; tasks: TaskData[]; taskIds: string[] }) {
@@ -13,7 +13,7 @@ export default function List({ list, tasks, taskIds }: { list: TaskList; tasks: 
 		data: {
 			type: 'list',
 			item: list,
-		},
+		} satisfies DraggableItemData,
 	})
 
 	const style = {
