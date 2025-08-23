@@ -32,12 +32,22 @@ export default function App() {
 		const { active, over, delta } = event
 		setActiveTask(null)
 
-		if (!over || !delta || (delta.x === 0 && delta.y === 0)) return
+		if (!over?.data.current) return
+		if (!delta || (delta.x === 0 && delta.y === 0)) return
 
-		const taskId = active.id as string
-		const currentTask = toDoData.tasks[taskId]
+		const currentTaskId = active.id as string
+		const currentTask = toDoData.tasks[currentTaskId]
+		const currentListId = currentTask.list
 
-		if (!currentTask) return
+		const overType = over.data.current.type
+		const overItem = over.data.current.item
+		const targetListId = overType === 'task' ? overItem.list : over.id
+
+		const isDifferentList = currentListId !== targetListId
+		const isSameList = currentListId === targetListId
+
+		if (!currentTask || !targetListId) return
+		if (overType === 'task' && currentTaskId === over.id) return
 
 		const taskMeasurements = draggedItemRef
 			? {
@@ -49,83 +59,169 @@ export default function App() {
 			: null
 		setDraggedItemRef(null)
 
-		setToDoData((prevData) => {
-			const newTasks = { ...prevData.tasks }
-			const newTasksByList = { ...prevData.tasksByList }
+		console.log('-------------------')
 
-			let newPosition = {
-				x: 0,
-				y: 0,
+		// CASE 01: LIST-1
+		// a) moved within
+		// - update x/y pos
+		// b) moved from another list
+		// - remove from old list, add to new
+		// - update x/y pos
+
+		// CASE 02: ANY OTHER LIST
+		// a) moved within
+		// - update order
+		// b) moved from another list
+		// - remove from old list, add to new
+		// - update order
+
+		if (targetListId === 'list-1') {
+			// CASE 01: MOVED TO OR WITHIN LIST-1
+			// -> adjust position (problem: get measurements of list when overType is task)
+			// + new list? -> change list
+		} else {
+			// CASE 02: MOVED TO OR WITHIN ANY OTHER LIST
+			const currListOrder = [...toDoData.tasksByList[currentListId]]
+			const targetListOrder = [...toDoData.tasksByList[targetListId]]
+			const currIndex = currListOrder.indexOf(currentTaskId)
+
+			const moveTask = (newListOrder: string[]) => {
+				const newIndex = overType === 'task' ? newListOrder.indexOf(over.id as string) : newListOrder.length
+
+				if (isSameList && currIndex === newIndex) return
+
+				currListOrder.splice(currIndex, 1)
+				newListOrder.splice(newIndex, 0, currentTaskId)
 			}
 
-			let targetListId = currentTask.list
+			moveTask(isSameList ? currListOrder : targetListOrder)
 
-			const targetIsDifferentList = over && over.id !== currentTask.list && prevData.lists[over.id as string]
+			setToDoData((prev) => {
+				const { tasks, tasksByList } = prev
 
-			// CASE 01: Task moved to different list
-			if (targetIsDifferentList) {
-				targetListId = over.id as string
-
-				if (targetListId === 'list-1') {
-					const draggedDistance = { x: delta.x, y: delta.y }
-					const taskStartPos = { x: taskMeasurements?.left || 0, y: taskMeasurements?.top || 0 }
-					const taskEndPos = { x: taskStartPos.x + draggedDistance.x, y: taskStartPos.y + draggedDistance.y }
-
-					const listWidth = over.rect.width
-					const listHeight = over.rect.height
-					const listOffset = { x: over.rect.left, y: over.rect.top }
-
-					const taskEndPosPercent = {
-						x: (taskEndPos.x - listOffset.x) / (listWidth / 100),
-						y: (taskEndPos.y - listOffset.y) / (listHeight / 100),
-					}
-
-					const taskWidthPercent = (taskMeasurements?.width || 0) / (listWidth / 100)
-					const taskHeightPercent = (taskMeasurements?.height || 0) / (listHeight / 100)
-
-					newPosition = {
-						x: Math.max(0, Math.min(taskEndPosPercent.x, 100 - taskWidthPercent)),
-						y: Math.max(0, Math.min(taskEndPosPercent.y, 100 - taskHeightPercent)),
-					}
+				return {
+					...prev,
+					...(isDifferentList && {
+						tasks: {
+							...tasks,
+							[currentTaskId]: { ...tasks[currentTaskId], list: targetListId },
+						},
+					}),
+					tasksByList: {
+						...tasksByList,
+						[currentListId]: [...currListOrder],
+						...(isDifferentList && { [targetListId]: [...targetListOrder] }),
+					},
 				}
+			})
+		}
 
-				newTasksByList[currentTask.list] = newTasksByList[currentTask.list].filter((id) => id !== taskId)
+		// setToDoData((prevData) => {
+		// 	const newTasks = { ...prevData.tasks }
+		// 	const newTasksByList = { ...prevData.tasksByList }
 
-				if (!newTasksByList[targetListId]) {
-					newTasksByList[targetListId] = []
-				}
-				if (!newTasksByList[targetListId].includes(taskId)) {
-					newTasksByList[targetListId].push(taskId)
-				}
-			} else {
-				// CASE 02: Task moved WITHIN first list
-				if (currentTask.list === 'list-1') {
-					const listWidth = over?.rect.width || 0
-					const listHeight = over?.rect.height || 0
-					const distancePercent = { x: (delta.x / listWidth) * 100, y: (delta.y / listHeight) * 100 }
+		// 	let newPosition = {
+		// 		x: 0,
+		// 		y: 0,
+		// 	}
 
-					const taskWidthPercent = (taskMeasurements?.width || 0) / (listWidth / 100)
-					const taskHeightPercent = (taskMeasurements?.height || 0) / (listHeight / 100)
+		// 	// const targetIsDifferentList = over.id !== currentTask.list && prevData.lists[over.id as string]
+		// 	const targetIsDifferentList = currentListId !== targetListId
 
-					newPosition = {
-						x: Math.max(0, Math.min(currentTask.position.x + distancePercent.x, 100 - taskWidthPercent)),
-						y: Math.max(0, Math.min(currentTask.position.y + distancePercent.y, 100 - taskHeightPercent)),
-					}
-				}
-			}
+		// 	// CASE 01: Task moved to different list
+		// 	if (targetIsDifferentList) {
+		// 		console.log('CASE 01: Task moved to different list')
 
-			newTasks[taskId] = {
-				...currentTask,
-				position: newPosition,
-				list: targetListId,
-			}
+		// 		if (targetListId === 'list-1') {
+		// 			console.log('-> LIST IS LIST-1')
+		// 			const draggedDistance = { x: delta.x, y: delta.y }
+		// 			console.log('draggedDistance', draggedDistance)
+		// 			const taskStartPos = { x: taskMeasurements?.left || 0, y: taskMeasurements?.top || 0 }
+		// 			const taskEndPos = { x: taskStartPos.x + draggedDistance.x, y: taskStartPos.y + draggedDistance.y }
 
-			return {
-				...prevData,
-				tasks: newTasks,
-				tasksByList: newTasksByList,
-			}
-		})
+		// 			// 👉👉👉 das hier geht nur mit listen, nicht mit tasks 👉 ÄNDERN!
+		// 			// 👉👉👉 wenn (list-1) dann (mit list-maßen arbeiten)
+		// 			const listWidth = over.rect.width
+		// 			const listHeight = over.rect.height
+		// 			const listOffset = { x: over.rect.left, y: over.rect.top }
+
+		// 			const taskEndPosPercent = {
+		// 				x: (taskEndPos.x - listOffset.x) / (listWidth / 100),
+		// 				y: (taskEndPos.y - listOffset.y) / (listHeight / 100),
+		// 			}
+
+		// 			const taskWidthPercent = (taskMeasurements?.width || 0) / (listWidth / 100)
+		// 			const taskHeightPercent = (taskMeasurements?.height || 0) / (listHeight / 100)
+
+		// 			newPosition = {
+		// 				x: Math.max(0, Math.min(taskEndPosPercent.x, 100 - taskWidthPercent)),
+		// 				y: Math.max(0, Math.min(taskEndPosPercent.y, 100 - taskHeightPercent)),
+		// 			}
+		// 		}
+
+		// 		newTasksByList[currentTask.list] = newTasksByList[currentTask.list].filter((id) => id !== currentTaskId)
+
+		// 		if (!newTasksByList[targetListId]) {
+		// 			newTasksByList[targetListId] = []
+		// 		}
+		// 		if (!newTasksByList[targetListId].includes(currentTaskId)) {
+		// 			newTasksByList[targetListId].push(currentTaskId)
+		// 		}
+		// 	} else {
+		// 		// CASE 02: Task moved WITHIN same list
+		// 		if (currentTask.list === 'list-1') {
+		// 			// within first list = free dragging
+		// 			console.log('CASE 02: Task moved WITHIN first list')
+		// 			const listWidth = over?.rect.width || 0
+		// 			const listHeight = over?.rect.height || 0
+		// 			const distancePercent = { x: (delta.x / listWidth) * 100, y: (delta.y / listHeight) * 100 }
+
+		// 			const taskWidthPercent = (taskMeasurements?.width || 0) / (listWidth / 100)
+		// 			const taskHeightPercent = (taskMeasurements?.height || 0) / (listHeight / 100)
+
+		// 			newPosition = {
+		// 				x: Math.max(0, Math.min(currentTask.position.x + distancePercent.x, 100 - taskWidthPercent)),
+		// 				y: Math.max(0, Math.min(currentTask.position.y + distancePercent.y, 100 - taskHeightPercent)),
+		// 			}
+		// 		} else {
+		// 			// within any other list
+		// 			console.log('---')
+		// 			console.log('CASE 03: Task moved WITHIN any other list than list-1')
+
+		// 			if (overType === 'task') {
+		// 				console.log('IS OVER TASK')
+		// 				const taskIds = newTasksByList[targetListId]
+		// 				const currentIndex = taskIds.indexOf(currentTaskId)
+		// 				const targetIndex = taskIds.indexOf(over.id as string)
+		// 				console.log('taskIds', taskIds)
+
+		// 				taskIds.splice(currentIndex, 1, over.id as string)
+		// 				taskIds.splice(targetIndex, 1, currentTaskId)
+
+		// 				// console.log('currentIndex', currentIndex)
+		// 				// console.log('targetIndex', targetIndex)
+		// 				console.log('newTasksByList[targetListId]', newTasksByList[targetListId])
+		// 			} else {
+		// 				console.log('IS OVER LIST')
+		// 			}
+
+		// 			// console.log('active', active)
+		// 			// console.log('over', over)
+		// 		}
+		// 	}
+
+		// 	newTasks[currentTaskId] = {
+		// 		...currentTask,
+		// 		position: newPosition,
+		// 		list: targetListId,
+		// 	}
+
+		// 	return {
+		// 		...prevData,
+		// 		tasks: newTasks,
+		// 		tasksByList: newTasksByList,
+		// 	}
+		// })
 	}
 
 	return (
