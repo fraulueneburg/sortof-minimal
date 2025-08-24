@@ -3,113 +3,13 @@ import { useState } from 'react'
 import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors, rectIntersection } from '@dnd-kit/core'
 
 import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core'
-import type { TaskData, ToDoData } from './utils/types'
+import type { TaskData, ToDoData } from './types'
+import { dummyData } from './data/dummydata.ts'
+
 import List from './components/List'
 
 export default function App() {
-	const [toDoData, setToDoData] = useState<ToDoData>({
-		lists: {
-			'list-1': {
-				_id: 'list-1',
-				title: 'To Do',
-				color: '#ff6b6b',
-			},
-			'list-2': {
-				_id: 'list-2',
-				title: 'In Progress',
-				color: '#4ecdc4',
-			},
-			'list-3': {
-				_id: 'list-3',
-				title: 'Done',
-				color: '#45b7d1',
-			},
-		},
-		tasksByList: {
-			'list-1': ['task-2', 'task-1', 'task-3', 'task-4', 'task-5'],
-			'list-2': ['task-6', 'task-7', 'task-8'],
-			'list-3': ['task-9', 'task-10', 'task-11'],
-		},
-		tasks: {
-			'task-1': {
-				_id: 'task-1',
-				title: 'Buy groceries',
-				checked: false,
-				list: 'list-1',
-				position: { x: 16, y: 36.7 },
-			},
-			'task-2': {
-				_id: 'task-2',
-				title: 'Review code',
-				checked: false,
-				list: 'list-1',
-				position: { x: 60, y: 50 },
-			},
-			'task-3': {
-				_id: 'task-3',
-				title: 'Call dentist for appointment',
-				checked: false,
-				list: 'list-1',
-				position: { x: 35, y: 56.7 },
-			},
-			'task-4': {
-				_id: 'task-4',
-				title: 'Submit report',
-				checked: true,
-				list: 'list-1',
-				position: { x: 0, y: 30 },
-			},
-			'task-5': {
-				_id: 'task-5',
-				title: 'Update resume',
-				checked: true,
-				list: 'list-1',
-				position: { x: 4, y: 90 },
-			},
-			'task-6': {
-				_id: 'task-6',
-				title: '1. one thing',
-				checked: true,
-				list: 'list-2',
-				position: { x: 4, y: 90 },
-			},
-			'task-7': {
-				_id: 'task-7',
-				title: '2. two things',
-				checked: true,
-				list: 'list-2',
-				position: { x: 4, y: 90 },
-			},
-			'task-8': {
-				_id: 'task-8',
-				title: '3. three things',
-				checked: true,
-				list: 'list-2',
-				position: { x: 4, y: 90 },
-			},
-			'task-9': {
-				_id: 'task-9',
-				title: '4. four things',
-				checked: true,
-				list: 'list-3',
-				position: { x: 4, y: 90 },
-			},
-			'task-10': {
-				_id: 'task-10',
-				title: '5. five things',
-				checked: true,
-				list: 'list-3',
-				position: { x: 4, y: 90 },
-			},
-			'task-11': {
-				_id: 'task-11',
-				title: '6. six things',
-				checked: true,
-				list: 'list-3',
-				position: { x: 4, y: 90 },
-			},
-		},
-	})
+	const [toDoData, setToDoData] = useState<ToDoData>(dummyData)
 
 	const [activeTask, setActiveTask] = useState<TaskData | null>(null)
 	const [draggedItemRef, setDraggedItemRef] = useState<HTMLElement | null>(null)
@@ -132,100 +32,99 @@ export default function App() {
 		const { active, over, delta } = event
 		setActiveTask(null)
 
+		if (!over?.data.current) return
 		if (!delta || (delta.x === 0 && delta.y === 0)) return
 
-		const taskId = active.id as string
-		const currentTask = toDoData.tasks[taskId]
+		const currentTaskId = active.id as string
+		const currentTask = toDoData.tasks[currentTaskId]
+		const currentListId = currentTask.list
+		const currListOrder = [...toDoData.tasksByList[currentListId]]
 
-		if (!currentTask) return
+		const overType = over.data.current.type
+		const overItem = over.data.current.item
+		const targetListId = overType === 'task' ? overItem.list : over.id
+		const targetListOrder = [...toDoData.tasksByList[targetListId]]
 
-		const taskMeasurements = draggedItemRef
-			? {
-					height: draggedItemRef.getBoundingClientRect().height,
-					width: draggedItemRef.getBoundingClientRect().width,
-					top: draggedItemRef.getBoundingClientRect().top,
-					left: draggedItemRef.getBoundingClientRect().left,
-			  }
-			: null
-		setDraggedItemRef(null)
+		let newPosition = { x: 0, y: 0 }
 
-		setToDoData((prevData) => {
-			const newTasks = { ...prevData.tasks }
-			const newTasksByList = { ...prevData.tasksByList }
+		const isFirstList = targetListId === 'list-1'
+		const isDifferentList = currentListId !== targetListId
+		const isSameList = currentListId === targetListId
 
-			let newPosition = {
-				x: 0,
-				y: 0,
+		if (!currentTask || !targetListId) return
+		if (overType === 'task' && currentTaskId === over.id && !isFirstList) return
+
+		// update position
+		if (isFirstList) {
+			const taskMeasurements = draggedItemRef
+				? {
+						height: draggedItemRef.getBoundingClientRect().height,
+						width: draggedItemRef.getBoundingClientRect().width,
+						top: draggedItemRef.getBoundingClientRect().top,
+						left: draggedItemRef.getBoundingClientRect().left,
+				  }
+				: null
+
+			const draggedDistance = { x: delta.x, y: delta.y }
+			const taskStartPos = { x: taskMeasurements?.left || 0, y: taskMeasurements?.top || 0 }
+			const taskEndPos = { x: taskStartPos.x + draggedDistance.x, y: taskStartPos.y + draggedDistance.y }
+
+			const listElem = document.querySelector(`.${targetListId}`) as HTMLElement
+			const listRect = listElem.getBoundingClientRect()
+			const listWidth = listRect.width
+			const listHeight = listRect.height
+			const listOffset = { x: listRect.left, y: listRect.top }
+
+			const taskEndPosPercent = {
+				x: (taskEndPos.x - listOffset.x) / (listWidth / 100),
+				y: (taskEndPos.y - listOffset.y) / (listHeight / 100),
 			}
 
-			let targetListId = currentTask.list
+			const taskWidthPercent = (taskMeasurements?.width || 0) / (listWidth / 100)
+			const taskHeightPercent = (taskMeasurements?.height || 0) / (listHeight / 100)
 
-			const targetIsDifferentList = over && over.id !== currentTask.list && prevData.lists[over.id as string]
-
-			// CASE 01: Task moved to different list
-			if (targetIsDifferentList) {
-				targetListId = over.id as string
-
-				if (targetListId === 'list-1') {
-					const draggedDistance = { x: delta.x, y: delta.y }
-					const taskStartPos = { x: taskMeasurements?.left || 0, y: taskMeasurements?.top || 0 }
-					const taskEndPos = { x: taskStartPos.x + draggedDistance.x, y: taskStartPos.y + draggedDistance.y }
-
-					const listWidth = over.rect.width
-					const listHeight = over.rect.height
-					const listOffset = { x: over.rect.left, y: over.rect.top }
-
-					const taskEndPosPercent = {
-						x: (taskEndPos.x - listOffset.x) / (listWidth / 100),
-						y: (taskEndPos.y - listOffset.y) / (listHeight / 100),
-					}
-
-					const taskWidthPercent = (taskMeasurements?.width || 0) / (listWidth / 100)
-					const taskHeightPercent = (taskMeasurements?.height || 0) / (listHeight / 100)
-
-					newPosition = {
-						x: Math.max(0, Math.min(taskEndPosPercent.x, 100 - taskWidthPercent)),
-						y: Math.max(0, Math.min(taskEndPosPercent.y, 100 - taskHeightPercent)),
-					}
-				}
-
-				newTasksByList[currentTask.list] = newTasksByList[currentTask.list].filter((id) => id !== taskId)
-
-				if (!newTasksByList[targetListId]) {
-					newTasksByList[targetListId] = []
-				}
-				if (!newTasksByList[targetListId].includes(taskId)) {
-					newTasksByList[targetListId].push(taskId)
-				}
-			} else {
-				// CASE 02: Task moved WITHIN first list
-				if (currentTask.list === 'list-1') {
-					const listWidth = over?.rect.width || 0
-					const listHeight = over?.rect.height || 0
-					const distancePercent = { x: (delta.x / listWidth) * 100, y: (delta.y / listHeight) * 100 }
-
-					const taskWidthPercent = (taskMeasurements?.width || 0) / (listWidth / 100)
-					const taskHeightPercent = (taskMeasurements?.height || 0) / (listHeight / 100)
-
-					newPosition = {
-						x: Math.max(0, Math.min(currentTask.position.x + distancePercent.x, 100 - taskWidthPercent)),
-						y: Math.max(0, Math.min(currentTask.position.y + distancePercent.y, 100 - taskHeightPercent)),
-					}
-				}
+			newPosition = {
+				x: Math.max(0, Math.min(taskEndPosPercent.x, 100 - taskWidthPercent)),
+				y: Math.max(0, Math.min(taskEndPosPercent.y, 100 - taskHeightPercent)),
 			}
+		}
 
-			newTasks[taskId] = {
-				...currentTask,
-				position: newPosition,
-				list: targetListId,
+		const moveTask = (newListOrder: string[]) => {
+			const currIndex = currListOrder.indexOf(currentTaskId)
+			const newIndex = overType === 'list' || isFirstList ? newListOrder.length : newListOrder.indexOf(over.id as string)
+
+			if (!isFirstList && isSameList && currIndex === newIndex) return
+
+			currListOrder.splice(currIndex, 1)
+			newListOrder.splice(newIndex, 0, currentTaskId)
+		}
+
+		moveTask(isSameList ? currListOrder : targetListOrder)
+
+		setToDoData((prev) => {
+			const { tasks, tasksByList } = prev
+
+			const updatedTask = {
+				...tasks[currentTaskId],
+				...(isDifferentList ? { list: targetListId } : {}),
+				...(isFirstList ? { position: newPosition } : {}),
 			}
 
 			return {
-				...prevData,
-				tasks: newTasks,
-				tasksByList: newTasksByList,
+				...prev,
+				tasks: {
+					...tasks,
+					[currentTaskId]: updatedTask,
+				},
+				tasksByList: {
+					...tasksByList,
+					[currentListId]: [...currListOrder],
+					...(isDifferentList && { [targetListId]: [...targetListOrder] }),
+				},
 			}
 		})
+
+		setDraggedItemRef(null)
 	}
 
 	return (
@@ -236,10 +135,14 @@ export default function App() {
 			onDragEnd={handleDragEnd}>
 			<div className="task-board">
 				{Object.values(toDoData.lists).map((list) => (
-					<List key={list._id} list={list} tasks={toDoData.tasksByList[list._id].map((taskId) => toDoData.tasks[taskId])} />
+					<List
+						key={list._id}
+						list={list}
+						tasks={toDoData.tasksByList[list._id].map((currentTaskId) => toDoData.tasks[currentTaskId])}
+						taskIds={toDoData.tasksByList[list._id]}
+					/>
 				))}
 			</div>
-
 			<DragOverlay>
 				{activeTask ? (
 					<section className="task dragging">
